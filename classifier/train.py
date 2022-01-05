@@ -9,7 +9,21 @@ from utils.model import BertClassifier
 from utils.datasets import Dataset
 
 
-def train(model, name, texts, labels, save_dir, learning_rate, epochs):
+def pred_acc(original, predicted):
+    return torch.round(predicted).eq(original).sum().numpy() / len(original)
+
+
+def train(
+    model,
+    name,
+    texts,
+    labels,
+    learning_rate=1e-6,
+    epochs=2,
+    save_dir="output",
+    classes=2,
+    multi_label=False,
+):
     os.makedirs(save_dir, exist_ok=True)
     tokenizer = BertTokenizer.from_pretrained(name)
     X_train, X_test, y_train, y_test = train_test_split(
@@ -26,6 +40,8 @@ def train(model, name, texts, labels, save_dir, learning_rate, epochs):
     device = torch.device("cuda" if use_cuda else "cpu")
 
     criterion = nn.CrossEntropyLoss()
+    if multi_label:
+        criterion = nn.BCEWithLogitsLoss()
     optimizer = Adam(model.parameters(), lr=learning_rate)
 
     if use_cuda:
@@ -45,11 +61,17 @@ def train(model, name, texts, labels, save_dir, learning_rate, epochs):
             input_id = train_input["input_ids"].squeeze(1).to(device)
 
             output = model(input_id, mask)
-
+            if multi_label:
+                output = output.to(torch.float32)
+                train_label = train_label.to(torch.float32)
             batch_loss = criterion(output, train_label)
             total_loss_train += batch_loss.item()
 
-            acc = (output.argmax(dim=1) == train_label).sum().item()
+            if not multi_label:
+                acc = (output.argmax(dim=1) == train_label).sum().item()
+            else:
+                preds = torch.where(output > 0.5, 1, 0)
+                acc = pred_acc(output, train_label)
             total_acc_train += acc
 
             model.zero_grad()
@@ -69,11 +91,18 @@ def train(model, name, texts, labels, save_dir, learning_rate, epochs):
 
                 output = model(input_id, mask)
 
+                if multi_label:
+                    output = output.to(torch.float32)
+                    val_label = val_label.to(torch.float32)
                 batch_loss = criterion(output, val_label)
                 total_loss_val += batch_loss.item()
 
-                acc = (output.argmax(dim=1) == val_label).sum().item()
-                total_acc_val += acc
+                if not multi_label:
+                    acc = (output.argmax(dim=1) == val_label).sum().item()
+                else:
+                    preds = torch.where(output > 0.5, 1, 0)
+                    acc = pred_acc(output, val_label)
+            total_acc_train += acc
 
         print(
             "\n".join(
@@ -90,11 +119,35 @@ def train(model, name, texts, labels, save_dir, learning_rate, epochs):
     tokenizer.save_pretrained(os.path.join(save_dir, "tokenizer"))
 
 
+def flatten_list(l):
+    out = []
+    for item in l:
+        if isinstance(item, list):
+            out.extend(flatten_list(item))
+        else:
+            out.append(item)
+    return out
+
+
 if __name__ == "__main__":
+    import pandas as pd
+    import re
+    from ast import literal_eval
+
+    df = pd.read_csv("TrainData.csv", index_col=False)
+    df = df[df["labels"] != "[0, 0, 0, 0, 0, 0]"]
+    df["labels"] = df["labels"].apply(lambda x: literal_eval(x))
+    df = df[:10]
     name = "bert-base-cased"
-    EPOCHS = 5
-    model = BertClassifier()
-    LR = 1e-6
-    texts = ["im good", "im bad", "im ok", "im sad"] * 100
-    labels = [0, 1, 0, 1] * 100
-    train(model, name, texts, labels, "output", LR, EPOCHS)
+    texts = df["Text"].tolist()
+    labels = df["labels"].tolist()
+    model = BertClassifier(classes=len(labels[0]))
+    train(
+        model,
+        name,
+        texts,
+        labels,
+        save_dir="output",
+        classes=len(labels[0]),
+        multi_label=True,
+    )
