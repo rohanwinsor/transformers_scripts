@@ -137,7 +137,6 @@ if __name__ == "__main__":
     df = pd.read_csv("TrainData.csv", index_col=False)
     df = df[df["labels"] != "[0, 0, 0, 0, 0, 0]"]
     df["labels"] = df["labels"].apply(lambda x: literal_eval(x))
-    df = df[:10]
     name = "bert-base-cased"
     texts = df["Text"].tolist()
     labels = df["labels"].tolist()
