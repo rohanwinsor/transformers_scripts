@@ -95,6 +95,6 @@ if __name__ == "__main__":
     EPOCHS = 5
     model = BertClassifier()
     LR = 1e-6
-    texts = ["im good", "im bad", "im ok", "im sad"]
-    labels = [0, 1, 0, 1]
+    texts = ["im good", "im bad", "im ok", "im sad"] * 100
+    labels = [0, 1, 0, 1] * 100
     train(model, name, texts, labels, "output", LR, EPOCHS)
