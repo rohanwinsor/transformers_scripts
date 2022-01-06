@@ -2,15 +2,15 @@ import os
 import torch
 import numpy as np
 from transformers import BertTokenizer
-from utils.model import BertClassifier
+from utils.model import TransformersClassifier
 from utils.datasets import Dataset
 
 
 class ClassifyModel:
     def __init__(self, path, classes=2, multi_label=False):
         self.multi_label = multi_label
-        self.model = BertClassifier(
-            classes=classes, name="bert-base-cased", dropout=0.5
+        self.model = TransformersClassifier(
+            name="bert", model_name="bert-base-cased", classes=classes, dropout=0.5
         )
         self.model.load_state_dict(torch.load(os.path.join(path, "model.pt")))
         self.tokenizer = BertTokenizer.from_pretrained(os.path.join(path, "tokenizer"))

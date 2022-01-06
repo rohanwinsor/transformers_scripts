@@ -5,7 +5,7 @@ import torch.nn as nn
 from tqdm import tqdm
 from transformers import BertTokenizer
 from sklearn.model_selection import train_test_split
-from utils.model import BertClassifier
+from utils.model import TransformersClassifier
 from utils.datasets import Dataset
 
 
@@ -13,7 +13,7 @@ def pred_acc(original, predicted):
     return torch.round(predicted).eq(original).sum().numpy() / len(original)
 
 
-def train(
+def main(
     model,
     name,
     texts,
@@ -21,7 +21,7 @@ def train(
     learning_rate=1e-6,
     epochs=2,
     save_dir="output",
-    classes=2,
+    num_labels=2,
     multi_label=False,
 ):
     os.makedirs(save_dir, exist_ok=True)
@@ -90,7 +90,6 @@ def train(
                 input_id = val_input["input_ids"].squeeze(1).to(device)
 
                 output = model(input_id, mask)
-
                 if multi_label:
                     output = output.to(torch.float32)
                     val_label = val_label.to(torch.float32)
@@ -136,17 +135,18 @@ if __name__ == "__main__":
 
     df = pd.read_csv("TrainData.csv", index_col=False)
     df = df[df["labels"] != "[0, 0, 0, 0, 0, 0]"]
+    df = df[:10]
     df["labels"] = df["labels"].apply(lambda x: literal_eval(x))
     name = "bert-base-cased"
     texts = df["Text"].tolist()
     labels = df["labels"].tolist()
-    model = BertClassifier(classes=len(labels[0]))
-    train(
+    model = TransformersClassifier(num_labels=len(labels[0]))
+    main(
         model,
         name,
         texts,
         labels,
         save_dir="output",
-        classes=len(labels[0]),
+        num_labels=len(labels[0]),
         multi_label=True,
     )

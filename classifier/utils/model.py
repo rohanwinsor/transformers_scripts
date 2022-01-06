@@ -1,24 +1,18 @@
 from torch import nn
-from transformers import BertModel
+from utils.model_classes import MODEL_CLASSES
 
 
-class BertClassifier(nn.Module):
-    def __init__(self, classes=2, name="bert-base-cased", dropout=0.5):
+class TransformersClassifier(nn.Module):
+    def __init__(
+        self, name="bert", model_name="bert-base-cased", num_labels=2, dropout=0.5
+    ):
+        config, model, _ = MODEL_CLASSES[name]
+        super(TransformersClassifier, self).__init__()
 
-        super(BertClassifier, self).__init__()
-
-        self.bert = BertModel.from_pretrained(name)
-        self.dropout = nn.Dropout(dropout)
-        self.linear = nn.Linear(768, classes)
-        self.relu = nn.ReLU()
+        self.model = model.from_pretrained(model_name, num_labels=num_labels)
 
     def forward(self, input_id, mask):
 
-        _, pooled_output = self.bert(
-            input_ids=input_id, attention_mask=mask, return_dict=False
-        )
-        dropout_output = self.dropout(pooled_output)
-        linear_output = self.linear(dropout_output)
-        final_layer = self.relu(linear_output)
-
-        return final_layer
+        out = self.model(input_ids=input_id, attention_mask=mask, return_dict=False)
+        # model outputs are always tuple
+        return out[0]
