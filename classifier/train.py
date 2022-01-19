@@ -24,7 +24,6 @@ def train(
     learning_rate=1e-6,
     epochs=2,
     save_dir="output",
-    classes=2,
     multi_label=False,
 ):
     os.makedirs(save_dir, exist_ok=True)
@@ -74,7 +73,7 @@ def train(
                 acc = (output.argmax(dim=1) == train_label).sum().item()
             else:
                 preds = torch.where(output > 0.5, 1, 0)
-                acc = pred_acc(output, train_label)
+                acc = pred_acc(preds, train_label)
             total_acc_train += acc
 
             model.zero_grad()
@@ -123,10 +122,6 @@ def train(
 
 
 if __name__ == "__main__":
-    import pandas as pd
-    import re
-    from ast import literal_eval
-
     name = "bert-base-cased"
     texts = [
         "Good",
@@ -134,14 +129,14 @@ if __name__ == "__main__":
         "Meh",
         "Good & Bad",
         "Bad & Meh",
-    ] * 10  # df["Text"].tolist()
+    ] * 10  
     labels = [
         [1, 0, 0],
         [0, 1, 0],
         [0, 0, 1],
         [1, 1, 0],
         [0, 1, 1],
-    ] * 10  # df["labels"].tolist()
+    ] * 10 
     model = BertClassifier(classes=3)
     train(
         model,
@@ -150,6 +145,5 @@ if __name__ == "__main__":
         labels,
         save_dir="output",
         epochs=10,
-        classes=3,
         multi_label=True,
     )
