@@ -45,17 +45,13 @@ class ClassifyModel:
                         ]
                     )
                 else:
-                    output.append(
-                        [
-                            np.array(i.argmax()).tolist()
-                            for i in self.model(input_id, mask)
-                        ]
-                    )
+                    out = self.model(input_id, mask)
+                    output.extend([torch.argmax(o).cpu().detach().numpy().tolist() for o in out])
             return output
 
 
 if __name__ == "__main__":
-    model = ClassifyModel(os.path.abspath("output"), 6, True)
-    string = "Explanation Why the edits made under my username Hardcore Metallica Fan were reverted? They weren't vandalisms, just closure on some GAs after I voted at New York Dolls FAC. And please don't remove the template from the talk page since I'm retired now.89.205.38.27"
+    model = ClassifyModel(os.path.abspath("output"), 3, False)
+    string = ["Good", "Bad", "Meh"]
     out = model.inference(string)
     print("out ::", out)

@@ -138,15 +138,15 @@ if __name__ == "__main__":
     df = df[df["labels"] != "[0, 0, 0, 0, 0, 0]"]
     df["labels"] = df["labels"].apply(lambda x: literal_eval(x))
     name = "bert-base-cased"
-    texts = df["Text"].tolist()
-    labels = df["labels"].tolist()
-    model = BertClassifier(classes=len(labels[0]))
+    texts = ["Good", "Bad"]*10 #df["Text"].tolist()
+    labels = [1, 0]*10 #df["labels"].tolist()
+    model = BertClassifier(classes=2)
     train(
         model,
         name,
         texts,
         labels,
         save_dir="output",
-        classes=len(labels[0]),
-        multi_label=True,
+        classes=2,
+        multi_label=False,
     )
