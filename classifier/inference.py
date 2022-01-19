@@ -16,7 +16,7 @@ class ClassifyModel:
         self.tokenizer = BertTokenizer.from_pretrained(os.path.join(path, "tokenizer"))
         self.model.eval()
 
-    def inference(self, text):
+    def inference(self, text, thresh=0.5):
         label = 0 if isinstance(text, str) else [0] * len(text)
         test = Dataset(self.tokenizer, text, label)
 
@@ -38,20 +38,24 @@ class ClassifyModel:
                 mask = test_input["attention_mask"].to(device)
                 input_id = test_input["input_ids"].squeeze(1).to(device)
                 if self.multi_label:
-                    output.append(
+                    out = self.model(input_id, mask)
+                    print("OUT ::", out)
+                    output.extend(
                         [
-                            torch.where(i > 0.5, 1, 0).tolist()
+                            torch.where(i > thresh, 1, 0).tolist()
                             for i in self.model(input_id, mask)
                         ]
                     )
                 else:
                     out = self.model(input_id, mask)
-                    output.extend([torch.argmax(o).cpu().detach().numpy().tolist() for o in out])
+                    output.extend(
+                        [torch.argmax(o).cpu().detach().numpy().tolist() for o in out]
+                    )
             return output
 
 
 if __name__ == "__main__":
-    model = ClassifyModel(os.path.abspath("output"), 3, False)
+    model = ClassifyModel(os.path.abspath("output"), 3, True)
     string = ["Good", "Bad", "Meh"]
-    out = model.inference(string)
+    out = model.inference(string, 0.4)
     print("out ::", out)

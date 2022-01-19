@@ -10,6 +10,9 @@ from utils.datasets import Dataset
 
 
 def pred_acc(original, predicted):
+    if predicted.is_cuda:
+        predicted = predicted.cpu()
+        original = original.cpu()
     return torch.round(predicted).eq(original).sum().numpy() / len(original)
 
 
@@ -119,34 +122,34 @@ def train(
     tokenizer.save_pretrained(os.path.join(save_dir, "tokenizer"))
 
 
-def flatten_list(l):
-    out = []
-    for item in l:
-        if isinstance(item, list):
-            out.extend(flatten_list(item))
-        else:
-            out.append(item)
-    return out
-
-
 if __name__ == "__main__":
     import pandas as pd
     import re
     from ast import literal_eval
 
-    df = pd.read_csv("TrainData.csv", index_col=False)
-    df = df[df["labels"] != "[0, 0, 0, 0, 0, 0]"]
-    df["labels"] = df["labels"].apply(lambda x: literal_eval(x))
     name = "bert-base-cased"
-    texts = ["Good", "Bad"]*10 #df["Text"].tolist()
-    labels = [1, 0]*10 #df["labels"].tolist()
-    model = BertClassifier(classes=2)
+    texts = [
+        "Good",
+        "Bad",
+        "Meh",
+        "Good & Bad",
+        "Bad & Meh",
+    ] * 10  # df["Text"].tolist()
+    labels = [
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 1, 0],
+        [0, 1, 1],
+    ] * 10  # df["labels"].tolist()
+    model = BertClassifier(classes=3)
     train(
         model,
         name,
         texts,
         labels,
         save_dir="output",
-        classes=2,
-        multi_label=False,
+        epochs=10,
+        classes=3,
+        multi_label=True,
     )
