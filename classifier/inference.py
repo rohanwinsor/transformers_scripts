@@ -1,6 +1,5 @@
 import os
 import torch
-import numpy as np
 from transformers import BertTokenizer
 from utils.model import BertClassifier
 from utils.datasets import Dataset
@@ -29,7 +28,6 @@ class ClassifyModel:
 
             self.model = self.model.cuda()
 
-        total_acc_test = 0
         output = []
         with torch.no_grad():
 
@@ -56,6 +54,12 @@ class ClassifyModel:
 
 if __name__ == "__main__":
     model = ClassifyModel(os.path.abspath("output"), 3, True)
-    string = ["Good", "Bad", "Meh"]
+    string = [
+        "Good",
+        "Bad",
+        "Meh",
+        "Good & Bad",
+        "Bad & Meh",
+    ]
     out = model.inference(string, 0.4)
     print("out ::", out)
