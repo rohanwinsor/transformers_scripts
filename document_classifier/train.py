@@ -1,6 +1,6 @@
 from transformers import LayoutLMForSequenceClassification, AdamW
 import torch
-from utils.datasets import create_data
+from utils.dataloader import create_data
 
 
 def train(data_path, model_path, epochs, device=None):
@@ -109,8 +109,13 @@ def train(data_path, model_path, epochs, device=None):
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('--path', action='store', type=str, required=True)
+    args = parser.parse_args()
+    print('path:', args.path)
     train(
-        data_path="data/train.json",
+        data_path=args.path,
         model_path="output",
         epochs=10,
     )

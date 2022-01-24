@@ -5,7 +5,7 @@ from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pytesseract
-from encode import encode_example
+from utils.encode import encode_example
 from datasets import Dataset, Features, Sequence, ClassLabel, Value, Array2D
 
 
