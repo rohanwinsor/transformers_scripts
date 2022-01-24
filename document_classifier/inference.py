@@ -2,15 +2,35 @@ import os
 import json
 from tranformers import LayoutLMForSequenceClassification
 import torch
+import pandas as pd
+from utils.dataloader import Dataset
+from utils.encode import apply_ocr, encode_example
+from datasets import Features, Sequence, ClassLabel, Value, Array2D
 
-def inference(model_path):
-    
-    with open(os.path.join(model_path, "labels.json"), "r") as f:
-        num_labels = json.load()["count"]
+
+features = Features(
+    {
+        "input_ids": Sequence(feature=Value(dtype="int64")),
+        "bbox": Array2D(dtype="int64", shape=(512, 4)),
+        "attention_mask": Sequence(Value(dtype="int64")),
+        "token_type_ids": Sequence(Value(dtype="int64")),
+        "label": ClassLabel(names=["refuted", "entailed"]),
+        "image_path": Value(dtype="string"),
+        "words": Sequence(feature=Value(dtype="string")),
+    }
+)
+def inference(model_path, input_path, device=None):
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    with open(os.path.join(model_path, "label2idx.json"), "r") as f:
+        label2idx = json.load()
     model = LayoutLMForSequenceClassification.from_pretrained(
-        "microsoft/layoutlm-base-uncased", num_labels=num_labels
+        "microsoft/layoutlm-base-uncased", num_labels=len(label2idx)
     )
-    test_data = pd.concat([X_test, y_test], axis=1)
+    model.to(device)
+    if type(input_path) == str:
+        input_path = [input_path]
+    test_data = pd.concat([input_path, [0] * len(input_path)], axis=1)
     test_size = len(test_data)
     test_dataset = Dataset.from_pandas(test_data)
     updated_test_dataset = test_dataset.map(apply_ocr)
@@ -27,3 +47,25 @@ def inference(model_path):
     test_dataloader = torch.utils.data.DataLoader(
         encoded_test_dataset, batch_size=1, shuffle=True
     )
+    
+    model.eval()
+    output = []
+    for batch in test_dataloader:
+        input_ids = batch["input_ids"].to(device)
+        bbox = batch["bbox"].to(device)
+        attention_mask = batch["attention_mask"].to(device)
+        token_type_ids = batch["token_type_ids"].to(device)
+        outputs = model(input_ids=input_ids, bbox=bbox, attention_mask=attention_mask, token_type_ids=token_type_ids)
+        predictions = outputs.logits.argmax(-1)
+        output.extend(predictions.tolist())
+    return output
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser.add_argument("--input_path", action="store", type=str, required=True)
+    parser.add_argument("--model_path", action="store", type=str, required=True)
+    args = parser.parse_args()
+
+    inference(args.model_path, args.input_path, device=None)
