@@ -16,8 +16,7 @@ def train(data_path, model_path, epochs, device=None):
         label2idx,
     ) = create_data(data_path)
     print(label2idx)
-    import IPython; IPython.embed();
-    print("Number of labels ::", len(label2idx))
+    print("Number of label2idx ::", len(label2idx))
     model = LayoutLMForSequenceClassification.from_pretrained(
         "microsoft/layoutlm-base-uncased", num_labels=len(label2idx)
     )
@@ -109,8 +108,8 @@ def train(data_path, model_path, epochs, device=None):
     accuracy = 100 * correct / test_size
     print("Testing accuracy:", accuracy.item())
     model.save_pretrained(model_path)
-    with open(os.path.join(model_path, "labels.json"), "w") as f:
-        json.dump({"count" : len(label2idx)})
+    with open(os.path.join(model_path, "label2idx.json"), "w") as f:
+        json.dump(label2idx)
 
 
 if __name__ == "__main__":
