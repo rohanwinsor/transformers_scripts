@@ -104,6 +104,7 @@ def create_data(dataset_path):
     train_size = len(train_data)
     validation_size = len(valid_data)
     test_size = len(test_data)
+    test_data.to_csv("test_data.csv", index=False)
 
     train_dataset = Dataset.from_pandas(train_data)
     updated_train_dataset = train_dataset.map(apply_ocr)
