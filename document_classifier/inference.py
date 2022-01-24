@@ -30,7 +30,7 @@ def inference(model_path, input_path, device=None):
     model.to(device)
     if type(input_path) == str:
         input_path = [input_path]
-    test_data = pd.concat([input_path, [0] * len(input_path)], axis=1)
+    test_data = pd.DataFrame({"image_path" : input_path, "label" : [0] * len(input_path)}, axis=1)
     test_size = len(test_data)
     test_dataset = Dataset.from_pandas(test_data)
     updated_test_dataset = test_dataset.map(apply_ocr)
