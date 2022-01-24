@@ -23,7 +23,7 @@ def inference(model_path, input_path, device=None):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     with open(os.path.join(model_path, "label2idx.json"), "r") as f:
-        label2idx = json.load()
+        label2idx = json.load(f)
     model = LayoutLMForSequenceClassification.from_pretrained(
         "microsoft/layoutlm-base-uncased", num_labels=len(label2idx)
     )
