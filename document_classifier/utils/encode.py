@@ -5,7 +5,7 @@ from datasets import Features, Sequence, ClassLabel, Value, Array2D
 tokenizer = LayoutLMTokenizer.from_pretrained("microsoft/layoutlm-base-uncased")
 
 
-def encode_example(example, max_seq_length=512, pad_token_box=[0, 0, 0, 0]):
+def encode_example(example, label2idx, max_seq_length=512, pad_token_box=[0, 0, 0, 0]):
     words = example["words"]
     normalized_word_boxes = example["bbox"]
 

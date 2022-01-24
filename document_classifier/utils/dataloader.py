@@ -120,7 +120,7 @@ def create_data(dataset_path):
     updated_test_dataset = updated_test_dataset.remove_columns("__index_level_0__")
 
     encoded_train_dataset = updated_train_dataset.map(
-        lambda example: encode_example(example), features=features
+        lambda example: encode_example(example, label2idx), features=features
     )
 
     encoded_train_dataset.set_format(
@@ -129,7 +129,7 @@ def create_data(dataset_path):
     )
 
     encoded_valid_dataset = updated_valid_dataset.map(
-        lambda example: encode_example(example), features=features
+        lambda example: encode_example(example, label2idx), features=features
     )
 
     encoded_valid_dataset.set_format(
@@ -138,7 +138,7 @@ def create_data(dataset_path):
     )
 
     encoded_test_dataset = updated_test_dataset.map(
-        lambda example: encode_example(example), features=features
+        lambda example: encode_example(example, label2idx), features=features
     )
 
     encoded_test_dataset.set_format(

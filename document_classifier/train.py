@@ -110,10 +110,11 @@ def train(data_path, model_path, epochs, device=None):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--path', action='store', type=str, required=True)
+
+    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser.add_argument("--path", action="store", type=str, required=True)
     args = parser.parse_args()
-    print('path:', args.path)
+    print("path:", args.path)
     train(
         data_path=args.path,
         model_path="output",
