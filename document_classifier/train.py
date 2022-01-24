@@ -1,7 +1,7 @@
 from transformers import LayoutLMForSequenceClassification, AdamW
 import torch
 from utils.dataloader import create_data
-
+import os, json
 
 def train(data_path, model_path, epochs, device=None):
     if device is None:
@@ -15,6 +15,9 @@ def train(data_path, model_path, epochs, device=None):
         test_size,
         label2idx,
     ) = create_data(data_path)
+    print(label2idx)
+    import IPython; IPython.embed();
+    print("Number of labels ::", len(label2idx))
     model = LayoutLMForSequenceClassification.from_pretrained(
         "microsoft/layoutlm-base-uncased", num_labels=len(label2idx)
     )
@@ -106,6 +109,8 @@ def train(data_path, model_path, epochs, device=None):
     accuracy = 100 * correct / test_size
     print("Testing accuracy:", accuracy.item())
     model.save_pretrained(model_path)
+    with open(os.path.join(model_path, "labels.json"), "w") as f:
+        json.dump({"count" : len(label2idx)})
 
 
 if __name__ == "__main__":
@@ -113,10 +118,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Process some integers.")
     parser.add_argument("--path", action="store", type=str, required=True)
+    parser.add_argument("--epoch", action="store", type=int, required=True)
+    parser.add_argument("--output", action="store", type=str, required=True)
     args = parser.parse_args()
     print("path:", args.path)
     train(
         data_path=args.path,
-        model_path="output",
-        epochs=10,
+        model_path=args.output,
+        epochs=args.epoch,
     )
