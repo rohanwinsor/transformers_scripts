@@ -3,8 +3,8 @@ import json
 from transformers import LayoutLMForSequenceClassification
 import torch
 import pandas as pd
-from utils.dataloader import Dataset
-from utils.encode import apply_ocr, encode_example
+from utils.dataloader import Dataset, apply_ocr
+from utils.encode import encode_example
 from datasets import Features, Sequence, ClassLabel, Value, Array2D
 
 
