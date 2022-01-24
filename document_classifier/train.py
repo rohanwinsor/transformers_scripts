@@ -109,7 +109,7 @@ def train(data_path, model_path, epochs, device=None):
     print("Testing accuracy:", accuracy.item())
     model.save_pretrained(model_path)
     with open(os.path.join(model_path, "label2idx.json"), "w") as f:
-        json.dump(label2idx)
+        json.dump(label2idx, f)
 
 
 if __name__ == "__main__":
