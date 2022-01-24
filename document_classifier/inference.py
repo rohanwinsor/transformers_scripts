@@ -1,6 +1,6 @@
 import os
 import json
-from tranformers import LayoutLMForSequenceClassification
+from transformers import LayoutLMForSequenceClassification
 import torch
 import pandas as pd
 from utils.dataloader import Dataset
