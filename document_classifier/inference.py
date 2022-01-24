@@ -19,6 +19,8 @@ features = Features(
         "words": Sequence(feature=Value(dtype="string")),
     }
 )
+
+
 def inference(model_path, input_path, device=None):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -30,11 +32,16 @@ def inference(model_path, input_path, device=None):
     model.to(device)
     if type(input_path) == str:
         input_path = [input_path]
-    test_data = pd.DataFrame({"image_path" : input_path, "label" : [0] * len(input_path)}, axis=1)
+    test_data = pd.DataFrame(
+        {
+            "image_path": input_path,
+            "label": [list(label2idx.keys())[0]] * len(input_path),
+        }
+    )
     test_size = len(test_data)
     test_dataset = Dataset.from_pandas(test_data)
     updated_test_dataset = test_dataset.map(apply_ocr)
-    updated_test_dataset = updated_test_dataset.remove_columns("__index_level_0__")
+    # updated_test_dataset = updated_test_dataset.remove_columns("__index_level_0__")
 
     encoded_test_dataset = updated_test_dataset.map(
         lambda example: encode_example(example, label2idx), features=features
@@ -47,7 +54,7 @@ def inference(model_path, input_path, device=None):
     test_dataloader = torch.utils.data.DataLoader(
         encoded_test_dataset, batch_size=1, shuffle=True
     )
-    
+    idx2label = {y: x for x, y in label2idx.items()}
     model.eval()
     output = []
     for batch in test_dataloader:
@@ -55,10 +62,16 @@ def inference(model_path, input_path, device=None):
         bbox = batch["bbox"].to(device)
         attention_mask = batch["attention_mask"].to(device)
         token_type_ids = batch["token_type_ids"].to(device)
-        outputs = model(input_ids=input_ids, bbox=bbox, attention_mask=attention_mask, token_type_ids=token_type_ids)
+        outputs = model(
+            input_ids=input_ids,
+            bbox=bbox,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+        )
         predictions = outputs.logits.argmax(-1)
         output.extend(predictions.tolist())
-    return output
+    return [idx2label[i] for i in output]
+
 
 if __name__ == "__main__":
     import argparse
@@ -68,4 +81,5 @@ if __name__ == "__main__":
     parser.add_argument("--model_path", action="store", type=str, required=True)
     args = parser.parse_args()
 
-    inference(args.model_path, args.input_path, device=None)
+    out = inference(args.model_path, args.input_path, device=None)
+    print("OUTPUT ::", out)

@@ -3,6 +3,7 @@ import torch
 from utils.dataloader import create_data
 import os, json
 
+
 def train(data_path, model_path, epochs, device=None):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
